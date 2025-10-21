@@ -1,0 +1,35 @@
+{
+	"schemaVersion": 1,
+	"id": "better_leads",
+	"version": "${version}",
+	"name": "better_leads",
+	"description": "Leash fences",
+	"authors": [
+		"the_blue_shark"
+	],
+	"contact": {
+		"sources": "https://github.com/the-blue-shark/better_leads"
+	},
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.theblueshark.better_leads.BetterLeadsMod"
+		],
+		"fabric-datagen": [
+			"net.theblueshark.better_leads.BetterLeadsModDataGenerator"
+		]
+	},
+	"mixins": [
+		"better_leads.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.17.3",
+		"minecraft": "~1.21.10",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
