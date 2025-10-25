@@ -11,6 +11,8 @@ import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.theblueshark.better_leads.entity.ModEntities;
+import net.theblueshark.better_leads.entity.custom.PolymerLeashKnotEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -41,33 +43,21 @@ public class LeadItemMixin {
 			return;
 		}
 
-		spawnLeashedRabbit(player, world, pos);
+		spawnLeashedPolymerLeashKnot(player, world, pos);
 		context.getStack().decrement(1);
 		cir.setReturnValue(ActionResult.SUCCESS);
 	}
 
 	@Unique
-	private void spawnLeashedRabbit(PlayerEntity player, World world, BlockPos pos) {
+	private void spawnLeashedPolymerLeashKnot(PlayerEntity player, World world, BlockPos pos) {
 		if (!(world instanceof ServerWorld serverWorld)) return;
 
-		LeashKnotEntity leashKnot = LeashKnotEntity.getOrCreate(world, pos);
-		leashKnot.setInvulnerable(true);
-		leashKnot.addCommandTag("leash_knot");
+		PolymerLeashKnotEntity leashKnot = new PolymerLeashKnotEntity(ModEntities.POLYMER_LEASH_KNOT, world);
+
+		leashKnot.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + 0.375, pos.getZ() + 0.5, 0, 0);
 		leashKnot.onPlace();
+		serverWorld.spawnEntity(leashKnot);
 
-		RabbitEntity rabbit = new RabbitEntity(EntityType.RABBIT, world);
-
-		rabbit.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + 0.375, pos.getZ() + 0.5, 0, 0);
-		rabbit.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, Integer.MAX_VALUE, 0, false, false));
-		rabbit.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, Integer.MAX_VALUE, 255, false, false));
-		rabbit.addCommandTag("leash_knot");
-		rabbit.setInvisible(true);
-		rabbit.setInvulnerable(true);
-		rabbit.setAiDisabled(true);
-		rabbit.setSilent(true);
-
-		serverWorld.spawnEntity(rabbit);
-
-		rabbit.attachLeash(player, true);
+		leashKnot.attachLeash(player, true);
 	}
 }

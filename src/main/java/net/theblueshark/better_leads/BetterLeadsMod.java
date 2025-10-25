@@ -14,6 +14,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.theblueshark.better_leads.entity.ModEntities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,7 @@ public class BetterLeadsMod implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		ModEntities.registerModEntities();
 		ServerTickEvents.END_SERVER_TICK.register(this::onServerTick);
 	}
 
