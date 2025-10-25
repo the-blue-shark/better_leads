@@ -28,29 +28,5 @@ public class BetterLeadsMod implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		ModEntities.registerModEntities();
-		ServerTickEvents.END_SERVER_TICK.register(this::onServerTick);
-	}
-
-	private void onServerTick(MinecraftServer server) {
-		for (ServerWorld world : server.getWorlds()) {
-			for (ServerPlayerEntity player : world.getPlayers()) {
-				double radius = 15.0;
-
-				List<Entity> nearbyEntities = world.getEntitiesByClass(Entity.class, player.getBoundingBox().expand(radius), entity -> entity.getCommandTags().contains("leash_knot"));
-
-				for (Entity entity : nearbyEntities) {
-					BlockPos pos = entity.getBlockPos();
-					BlockState blockState = world.getBlockState(pos);
-
-					if (!(blockState.getBlock() instanceof FenceBlock)) {
-						if(entity instanceof Leashable leashable && leashable.isLeashed()) {
-							ItemEntity itemEntity = new ItemEntity(world, entity.getX(), entity.getY(), entity.getZ(), new ItemStack(Items.LEAD));
-							world.spawnEntity(itemEntity);
-						}
-						entity.discard();
-					}
-				}
-			}
-		}
 	}
 }
