@@ -136,6 +136,9 @@ public class PolymerLeashKnotEntity extends BlockAttachedEntity implements Polym
 
         if (!this.getEntityWorld().isClient() && this.getEntityWorld() instanceof ServerWorld serverWorld) {
             Leashable.tickLeash(serverWorld, this);
+            if(this.getLeashHolder() == null) {
+                this.discard();
+            }
         }
     }
 
