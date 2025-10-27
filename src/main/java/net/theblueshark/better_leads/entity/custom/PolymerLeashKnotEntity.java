@@ -25,13 +25,13 @@ import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.theblueshark.better_leads.BetterLeadsMod;
 import org.jetbrains.annotations.Nullable;
 import xyz.nucleoid.packettweaker.PacketContext;
 
 import java.util.List;
 
 public class PolymerLeashKnotEntity extends BlockAttachedEntity implements PolymerEntity, Leashable {
-    private Leashable.LeashData leashData;
     private final ElementHolder holder;
     private final EntityAttachment attachment;
     private final GenericEntityElement leashKnot = new GenericEntityElement() {
@@ -40,6 +40,8 @@ public class PolymerLeashKnotEntity extends BlockAttachedEntity implements Polym
             return EntityType.LEASH_KNOT;
         }
     };
+    @Nullable
+    private Leashable.LeashData leashData;
 
     private final MobAnchorElement rideAnchor = new MobAnchorElement();
 
@@ -79,6 +81,7 @@ public class PolymerLeashKnotEntity extends BlockAttachedEntity implements Polym
         this.leashData = leashData;
     }
 
+
     protected void initDataTracker(DataTracker.Builder builder) {
     }
 
@@ -93,9 +96,11 @@ public class PolymerLeashKnotEntity extends BlockAttachedEntity implements Polym
     }
 
     protected void writeCustomData(WriteView view) {
+        this.writeLeashData(view, this.leashData);
     }
 
     protected void readCustomData(ReadView view) {
+        this.readLeashData(view);
     }
 
 
@@ -136,7 +141,8 @@ public class PolymerLeashKnotEntity extends BlockAttachedEntity implements Polym
 
         if (!this.getEntityWorld().isClient() && this.getEntityWorld() instanceof ServerWorld serverWorld) {
             Leashable.tickLeash(serverWorld, this);
-            if(this.getLeashHolder() == null) {
+
+            if (!this.isLeashed()) {
                 this.discard();
             }
         }
