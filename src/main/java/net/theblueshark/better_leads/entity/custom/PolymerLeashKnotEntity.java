@@ -3,7 +3,6 @@ package net.theblueshark.better_leads.entity.custom;
 import eu.pb4.polymer.core.api.entity.PolymerEntity;
 import eu.pb4.polymer.virtualentity.api.ElementHolder;
 import eu.pb4.polymer.virtualentity.api.attachment.EntityAttachment;
-import eu.pb4.polymer.virtualentity.api.elements.EntityElement;
 import eu.pb4.polymer.virtualentity.api.elements.GenericEntityElement;
 import eu.pb4.polymer.virtualentity.api.elements.MobAnchorElement;
 import eu.pb4.polymer.virtualentity.api.tracker.EntityTrackedData;
@@ -12,7 +11,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.Leashable;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.decoration.BlockAttachedEntity;
-import net.minecraft.entity.decoration.LeashKnotEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.registry.tag.BlockTags;
@@ -21,11 +19,9 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.storage.ReadView;
 import net.minecraft.storage.WriteView;
-import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.theblueshark.better_leads.BetterLeadsMod;
 import org.jetbrains.annotations.Nullable;
 import xyz.nucleoid.packettweaker.PacketContext;
 
@@ -142,7 +138,7 @@ public class PolymerLeashKnotEntity extends BlockAttachedEntity implements Polym
         if (!this.getEntityWorld().isClient() && this.getEntityWorld() instanceof ServerWorld serverWorld) {
             Leashable.tickLeash(serverWorld, this);
 
-            if (!this.isLeashed()) {
+            if (!this.mightBeLeashed()) {
                 this.discard();
             }
         }
