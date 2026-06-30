@@ -6,22 +6,22 @@ import eu.pb4.polymer.virtualentity.api.attachment.EntityAttachment;
 import eu.pb4.polymer.virtualentity.api.elements.GenericEntityElement;
 import eu.pb4.polymer.virtualentity.api.elements.MobAnchorElement;
 import eu.pb4.polymer.virtualentity.api.tracker.EntityTrackedData;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Leashable;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.decoration.BlockAttachedEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.storage.ReadView;
-import net.minecraft.storage.WriteView;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Leashable;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.entity.decoration.BlockAttachedEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 import xyz.nucleoid.packettweaker.PacketContext;
 
@@ -41,17 +41,17 @@ public class PolymerLeashKnotEntity extends BlockAttachedEntity implements Polym
 
     private final MobAnchorElement rideAnchor = new MobAnchorElement();
 
-    public PolymerLeashKnotEntity(EntityType<? extends BlockAttachedEntity> entityType, World world) {
+    public PolymerLeashKnotEntity(EntityType<? extends BlockAttachedEntity> entityType, Level world) {
         super(entityType, world);
 
         this.holder = new ElementHolder() {
             @Override
-            protected void notifyElementsOfPositionUpdate(Vec3d newPos, Vec3d delta) {
+            protected void notifyElementsOfPositionUpdate(Vec3 newPos, Vec3 delta) {
                 rideAnchor.notifyMove(this.getPos(), newPos, delta);
             }
 
             @Override
-            public Vec3d getPos() {
+            public Vec3 getPos() {
                 return this.getAttachment().getPos();
             }
         };
@@ -78,56 +78,56 @@ public class PolymerLeashKnotEntity extends BlockAttachedEntity implements Polym
     }
 
 
-    protected void initDataTracker(DataTracker.Builder builder) {
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
     }
 
-    public boolean shouldRender(double distance) {
+    public boolean shouldRenderAtSqrDistance(double distance) {
         return distance < 1024.0;
     }
 
 
-    public void onBreak(ServerWorld world, @Nullable Entity breaker) {
-        this.detachLeash();
-        this.playSound(SoundEvents.ITEM_LEAD_UNTIED, 1.0F, 1.0F);
+    public void dropItem(ServerLevel world, @Nullable Entity breaker) {
+        this.dropLeash();
+        this.playSound(SoundEvents.LEAD_UNTIED, 1.0F, 1.0F);
     }
 
-    protected void writeCustomData(WriteView view) {
+    protected void addAdditionalSaveData(ValueOutput view) {
         this.writeLeashData(view, this.leashData);
     }
 
-    protected void readCustomData(ReadView view) {
+    protected void readAdditionalSaveData(ValueInput view) {
         this.readLeashData(view);
     }
 
 
-    public void onHeldLeashUpdate(Leashable heldLeashable) {
-        if (Leashable.collectLeashablesHeldBy(this).isEmpty()) {
+    public void notifyLeasheeRemoved(Leashable heldLeashable) {
+        if (Leashable.leashableLeashedTo(this).isEmpty()) {
             this.discard();
         }
 
     }
 
     public void onPlace() {
-        this.playSound(SoundEvents.ITEM_LEAD_TIED, 1.0F, 1.0F);
+        this.playSound(SoundEvents.LEAD_TIED, 1.0F, 1.0F);
     }
 
     @Override
-    protected void updateAttachmentPosition() {
-        this.setPos((double)this.attachedBlockPos.getX() + 0.5, (double)this.attachedBlockPos.getY() + 0.375, (double)this.attachedBlockPos.getZ() + 0.5);
+    protected void recalculateBoundingBox() {
+        this.setPosRaw((double)this.pos.getX() + 0.5, (double)this.pos.getY() + 0.375, (double)this.pos.getZ() + 0.5);
         double d = (double)this.getType().getWidth() / 2.0;
         double e = (double)this.getType().getHeight();
-        this.setBoundingBox(new Box(this.getX() - d, this.getY(), this.getZ() - d, this.getX() + d, this.getY() + e, this.getZ() + d));
+        this.setBoundingBox(new AABB(this.getX() - d, this.getY(), this.getZ() - d, this.getX() + d, this.getY() + e, this.getZ() + d));
     }
 
-    public boolean canStayAttached() {
-        return this.getEntityWorld().getBlockState(this.attachedBlockPos).isIn(BlockTags.FENCES);
+    public boolean survives() {
+        return this.level().getBlockState(this.pos).is(BlockTags.FENCES);
     }
 
-    public Vec3d getLeashPos(float tickProgress) {
-        return this.getLerpedPos(tickProgress).add(0.0, 0.2, 0.0);
+    public Vec3 getRopeHoldPosition(float tickProgress) {
+        return this.getPosition(tickProgress).add(0.0, 0.2, 0.0);
     }
 
-    public ItemStack getPickBlockStack() {
+    public ItemStack getPickResult() {
         return new ItemStack(Items.LEAD);
     }
 
@@ -135,18 +135,18 @@ public class PolymerLeashKnotEntity extends BlockAttachedEntity implements Polym
     public void tick() {
         super.tick();
 
-        if (!this.getEntityWorld().isClient() && this.getEntityWorld() instanceof ServerWorld serverWorld) {
+        if (!this.level().isClientSide() && this.level() instanceof ServerLevel serverWorld) {
             Leashable.tickLeash(serverWorld, this);
 
-            if (!this.mightBeLeashed()) {
+            if (!this.mayBeLeashed()) {
                 this.discard();
             }
         }
     }
 
     @Override
-    public void modifyRawTrackedData(List<DataTracker.SerializedEntry<?>> data, ServerPlayerEntity player, boolean initial) {
-        data.add(DataTracker.SerializedEntry.of(EntityTrackedData.FLAGS, (byte) (1 << EntityTrackedData.INVISIBLE_FLAG_INDEX)));
+    public void modifyRawTrackedData(List<SynchedEntityData.DataValue<?>> data, ServerPlayer player, boolean initial) {
+        data.add(SynchedEntityData.DataValue.create(EntityTrackedData.FLAGS, (byte) (1 << EntityTrackedData.INVISIBLE_FLAG_INDEX)));
     }
 
 }
