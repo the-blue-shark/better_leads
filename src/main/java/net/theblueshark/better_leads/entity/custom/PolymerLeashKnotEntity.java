@@ -3,9 +3,10 @@ package net.theblueshark.better_leads.entity.custom;
 import eu.pb4.polymer.core.api.entity.PolymerEntity;
 import eu.pb4.polymer.virtualentity.api.ElementHolder;
 import eu.pb4.polymer.virtualentity.api.attachment.EntityAttachment;
+import eu.pb4.polymer.virtualentity.api.data.EntityData;
 import eu.pb4.polymer.virtualentity.api.elements.GenericEntityElement;
 import eu.pb4.polymer.virtualentity.api.elements.MobAnchorElement;
-import eu.pb4.polymer.virtualentity.api.tracker.EntityTrackedData;
+import net.fabricmc.fabric.api.networking.v1.context.PacketContext;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Leashable;
@@ -23,7 +24,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
-import xyz.nucleoid.packettweaker.PacketContext;
 
 import java.util.List;
 
@@ -146,8 +146,10 @@ public class PolymerLeashKnotEntity extends BlockAttachedEntity implements Polym
 
     @Override
     public void modifyRawTrackedData(List<SynchedEntityData.DataValue<?>> data, ServerPlayer player, boolean initial) {
-        data.add(SynchedEntityData.DataValue.create(EntityTrackedData.FLAGS, (byte) (1 << EntityTrackedData.INVISIBLE_FLAG_INDEX)));
+            data.add(SynchedEntityData.DataValue.create(EntityData.SILENT, true));
+        data.add(SynchedEntityData.DataValue.create(EntityData.FLAGS, (byte) (1 << EntityData.INVISIBLE_FLAG_INDEX)));
+            data.add(SynchedEntityData.DataValue.create(EntityData.NO_GRAVITY, true));
+            data.add(SynchedEntityData.DataValue.create(EntityData.NAME_VISIBLE, false));
     }
-
 }
 
